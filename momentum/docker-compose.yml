@@ -1,13 +1,14 @@
 version: '3.8'
 services:
-   gunicorn:
-    container_name: g-app
-    image: g-app-image
-    build: scripts
-    ports:
-      - "9009:9009"
-    networks:
-      - app-network
+#   gunicorn:
+#    container_name: g-app
+#    image: g-app-image
+#    build: scripts
+#    ports:
+#      - "9009:9009"
+#    networks:
+#      - app-network
+
 
    db:
     image: postgres:16.4
@@ -50,7 +51,7 @@ services:
       ports:
         - "9999:80"
       depends_on:
-        - gunicorn
+        - app
       restart: unless-stopped
       networks:
         - app-network

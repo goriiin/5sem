@@ -20,4 +20,6 @@ RUN chmod +x /usr/src/app/entrypoint.sh
 
 COPY . $APP_HOME
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+#CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+CMD ["gunicorn", "-b", "0.0.0.0:9009", "--workers", "2", "wsgi:application"]
