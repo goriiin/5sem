@@ -49,3 +49,5 @@ trove-classifiers==2023.9.19
 urllib3==2.0.6
 virtualenv==20.26.2
 zipp==3.17.0
+
+Faker~=30.8.0

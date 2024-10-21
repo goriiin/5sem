@@ -1,6 +1,3 @@
-Вот сокращенная версия Makefile:
-
-```makefile
 BINARY_NAME=server
 
 S=sudo
@@ -49,8 +46,13 @@ help:
 	@echo '   rm-all - удаляет все контейнеры'
 
 
+
+
 install:
 	pip install -r requirements.txt
+
+app-run:
+	python3 manage.py runserver
 
 guni-run:
 	gunicorn -b 0.0.0.0:9009 momentum.wsgi:application &
@@ -100,6 +102,3 @@ down:
 	$(S) $(DC) down
 
 .PHONY: clean build
-```
-
-Теперь команды для перезапуска контейнеров сокращены до `r-nginx`, `r-guni`, `r-app` и `r-all`.

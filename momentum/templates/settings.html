@@ -1,0 +1,32 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load django_bootstrap5 %}
+
+
+{% block head %}
+    <div class="d-flex gap-3 align-items-center">
+        <h4 class="white">Меню смены аватарки</h4>
+    </div>
+{% endblock %}
+{% block content %}
+    <div class="col-8">
+        <div class="row">
+            <div class="float-left col-5">
+                <p>
+                <h5>
+                    Ваша аватарка
+                </h5>
+
+                </p>
+                <img src="{{ request.user.profile.avatar_path.url }}" class="start-0 border-1 border-white w-75"
+                     alt="...">
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <button type="submit" class="btn my-btn mb-3">Success</button>
+        </form>
+    </div>
+{% endblock %}
