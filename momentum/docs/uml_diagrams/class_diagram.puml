@@ -1,0 +1,31 @@
+
+@startuml
+class Пользователь {
+    +username: CharField
+    +email: EmailField
+}
+
+class Профиль {
+    +avatar_path: String
+    +answers_count: Integer
+    +followers_count: Integer
+}
+
+class Пост {
+    +content: Text
+    +created_time: DateTime
+    +likes_count: Integer
+    +answers_count: Integer
+}
+
+class Ответ {
+    +answer: Text
+    +created_time: DateTime
+    +likes_count: Integer
+}
+
+Пользователь "1" -- "1" Профиль
+Профиль "1" -- "*" Пост
+Профиль "1" -- "*" Ответ
+Пост "1" -- "*" Ответ
+@enduml
