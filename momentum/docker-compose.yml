@@ -27,34 +27,34 @@ services:
     networks:
       - app-network
 
-   app:
-    build: .
-    ports:
-      - "9099:8000"
-    image: app-image
-    container_name: app
-    restart: unless-stopped
-    volumes:
-        - ./uploads:/app/uploads
-    networks:
-      - app-network
-    depends_on:
-      - db
+#   app:
+#    build: .
+#    ports:
+#      - "9099:8000"
+#    image: app-image
+#    container_name: app
+#    restart: unless-stopped
+#    volumes:
+#        - ./uploads:/app/uploads
+#    networks:
+#      - app-network
+#    depends_on:
+#      - db
 
-   nginx:
-      image: nginx-app-image
-      container_name: nginx-app
-      build: ./nginx
-      volumes:
-        - ./static:/vol/static
-        - ./uploads:/vol/uploads
-      ports:
-        - "9999:80"
-      depends_on:
-        - app
-      restart: unless-stopped
-      networks:
-        - app-network
+#   nginx:
+#      image: nginx-app-image
+#      container_name: nginx-app
+#      build: ./nginx
+#      volumes:
+#        - ./static:/vol/static
+#        - ./uploads:/vol/uploads
+#      ports:
+#        - "9999:80"
+##      depends_on:
+##        - app
+#      restart: unless-stopped
+#      networks:
+#        - app-networks
 
 
 volumes:

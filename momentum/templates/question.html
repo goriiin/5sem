@@ -16,12 +16,9 @@
                 </div>
                 <div class="col">
                     <div class="card-body">
-                        <span class="card-title">
-                            <h3 class="text-primary">{{ question.title }}</h3>
-                        </span>
                         <div class="mb-3">
-                            <span class="text-muted">username:</span> <span
-                                class="text-success"> {{ question.author.user.username }}</span>
+                            <span class="text-muted">username:</span> <a href="{% url 'user_profile' question.author.user.username %}"
+                                class="text-success"> {{ question.author.user.username }}</a>
                         </div>
                         <p class="card-text">
                             {{ question.content }}
@@ -64,6 +61,8 @@
                                 {% endfor %}
                             </div>
                         </div>
+                    {% include 'layouts/elements/edit_post_button.html' with post=question %}
+                    {% include 'layouts/elements/user_media.html' %}
                     </div>
                 </div>
             </div>

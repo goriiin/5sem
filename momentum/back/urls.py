@@ -7,7 +7,6 @@ from back import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('hot', views.hot, name='hot'),
-    path('new', views.new, name='new'),
     path('profile', views.profile, name='profile'),
     path('login', views.log_in, name='login'),
     path('ask', views.ask, name='ask'),
@@ -17,6 +16,13 @@ urlpatterns = [
     path('question/<int:question_id>/', views.question, name='question'),
     path('tag/<str:tag_name>/', views.tag, name='tag'),
     path('like/', views.like, name='like'),
+    path('edit_post/<int:post_id>', views.edit_post, name='edit_post'),
+    path('delete_post/<int:post_id>', views.delete_post, name='delete_post'),
+    path('profile/', views.profile, name='profile'),
+    path('profile/<str:username>/', views.profile, name='user_profile'),
+    path('follow/<str:username>/', views.follow_user, name='follow_user'),
+    path('unfollow/<str:username>/', views.unfollow_user, name='unfollow_user'),
+    path('profile/<str:username>/followers/', views.followers_list, name='followers_list'),
 ]
 
 if settings.DEBUG:

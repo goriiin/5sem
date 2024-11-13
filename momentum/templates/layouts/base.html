@@ -24,7 +24,7 @@
             {% block content %}
             {% endblock %}
             <div class="col-4">
-                <h3 class="white">Popular Tags</h3>
+                <h3 class="white">Популярные теги</h3>
                 <div class="col-8">
                     <div class="row">
                         {% for tag in pop_tags %}
@@ -32,17 +32,17 @@
                         {% endfor %}
                     </div>
                 </div>
-                <h3 class="mt-5 white">Best Members</h3>
+                <h3 class="mt-5 white">Активные пользователи</h3>
                 <div>
                     {% for u in pop_users %}
-                        <h6 href="" class="d-block link-success">{{ u.user.username }}</h6>
+                        <a href="{% url 'user_profile' u.user.username %}" class="d-block link-success">{{ u.user.username }}</a>
                     {% endfor %}
                 </div>
             </div>
         </div>
     </main>
 </div>
-</body>
 <script src="{% static 'bootstrap-5.3.3-dist/js/bootstrap.bundle.js' %}"></script>
 <script src="{% static 'js/main.js' %}"></script>
+</body>
 </html>

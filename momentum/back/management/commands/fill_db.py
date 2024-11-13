@@ -1,10 +1,12 @@
 from django.core.management.base import BaseCommand
-from back.models import Profile, Question, Answer, Tag, AnswerLike, QuestionLike
+from back.models import Profile, Post, Answer, Tag, AnswerLike, PostLike
 from django.contrib.auth.models import User
 import random
 from faker import Faker
+from datetime import timedelta
+from django.utils import timezone
 
-fake = Faker()
+fake = Faker('ru_RU')
 
 
 class Command(BaseCommand):
@@ -16,64 +18,78 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         ratio = options['ratio']
 
-        # Create users and profiles in bulk
-        users = [User(username=fake.user_name() + f"{i}", email=f"{i}" + fake.email(), password='123') for i in
-                 range(ratio)]
+        # Создание пользователей
+        users = []
+        for i in range(ratio):
+            user = User(username=fake.user_name() + f"{i}", email=f"{i}" + fake.email())
+            user.set_password('123456')
+            users.append(user)
         User.objects.bulk_create(users)
 
         profiles = [Profile(user=user) for user in User.objects.all()]
         Profile.objects.bulk_create(profiles)
 
-        # Create tags in bulk
-        tags = set()  # Используем множество для хранения уникальных имен тегов
-        existing_tags = set(Tag.objects.values_list('tag_name', flat=True))  # Существующие теги в базе данных
+        # Создание тегов
+        tags = set()
+        existing_tags = set(Tag.objects.values_list('tag_name', flat=True))
 
         while len(tags) < ratio:
             name = fake.word()
-            if name not in existing_tags:  # Проверяем, существует ли тег
-                tags.add(name)  # Добавляем только уникальные имена тегов
+            if name not in existing_tags:
+                tags.add(name)
 
-        # Создаем объекты Tag и сохраняем их в bulk
         tag_objects = [Tag(tag_name=name) for name in tags]
         Tag.objects.bulk_create(tag_objects)
 
-        # Create questions in bulk
-        profiles = list(Profile.objects.all())  # Retrieve profiles once to avoid querying in the loop
-        questions = []
+        profiles = list(Profile.objects.all())
+        posts = []
+
+        # Генерация постов с рандомной датой в пределах последнего месяца
         for i in range(ratio * 10):
             profile = random.choice(profiles)
-            questions.append(Question(title=fake.sentence(), content=fake.paragraph(), author=profile))
-        Question.objects.bulk_create(questions)
+            random_days_ago = random.randint(0, 30)
+            random_hours_ago = random.randint(0, 23)
+            created_time = timezone.now() - timedelta(days=random_days_ago, hours=random_hours_ago)
+            posts.append(Post(content=fake.paragraph(), author=profile, created_time=created_time))
+        Post.objects.bulk_create(posts)
 
-        # Add tags to questions
-        questions = list(Question.objects.all())
+        # Добавление тегов к постам
+        posts = list(Post.objects.all())
         tags = list(Tag.objects.all())
-        for question in questions:
-            random_tags = random.sample(tags, random.randint(1, 5))  # Select random 1 to 5 tags per question
-            question.tags.set(random_tags)
+        for post in posts:
+            random_tags = random.sample(tags, random.randint(1, 5))
+            post.tags.set(random_tags)
 
-        # Create answers in bulk
+        # Создание ответов
         answers = []
         for i in range(ratio * 100):
-            question = random.choice(questions)
+            post = random.choice(posts)
             profile = random.choice(profiles)
-            answers.append(Answer(answer=fake.paragraph(), question=question, author=profile, correct=fake.boolean()))
+            answers.append(Answer(answer=fake.paragraph(), question=post, author=profile))
         Answer.objects.bulk_create(answers)
 
-        # Create question likes in bulk with uniqueness check
-        question_likes_set = set()
-        question_likes = []
-        for i in range(ratio * 200):
-            question = random.choice(questions)
-            profile = random.choice(profiles)
-            key = (question.id, profile.id)
-            if key not in question_likes_set:
-                question_likes_set.add(key)
-                vote = random.choice([-1, 1])
-                question_likes.append(QuestionLike(user_id=profile, question_id=question, vote=vote))
-        QuestionLike.objects.bulk_create(question_likes)
+        # Пересчитываем количество ответов для вопросов
+        for post in Post.objects.all():
+            post.recalculate_answers_count()
 
-        # Create answer likes in bulk with uniqueness check
+        # Пересчитываем количество ответов для профилей
+        for profile in Profile.objects.all():
+            profile.recalculate_answers_count()
+
+        # Создание лайков к постам
+        post_likes_set = set()
+        post_likes = []
+        for i in range(ratio * 200):
+            post = random.choice(posts)
+            profile = random.choice(profiles)
+            key = (post.id, profile.id)
+            if key not in post_likes_set:
+                post_likes_set.add(key)
+                vote = random.choice([-1, 1])
+                post_likes.append(PostLike(user_id=profile, question_id=post, vote=vote))
+        PostLike.objects.bulk_create(post_likes)
+
+        # Создание лайков к ответам
         answer_likes_set = set()
         answer_likes = []
         for i in range(ratio * 200):
@@ -85,5 +101,13 @@ class Command(BaseCommand):
                 vote = random.choice([-1, 1])
                 answer_likes.append(AnswerLike(user_id=profile, answer_id=answer, vote=vote))
         AnswerLike.objects.bulk_create(answer_likes)
+
+        # Пересчитываем рейтинг для каждого поста
+        for post in Post.objects.all():
+            post.recalculate_likes()
+
+        # Пересчитываем рейтинг для каждого ответа
+        for answer in Answer.objects.all():
+            answer.recalculate_likes()
 
         self.stdout.write(self.style.SUCCESS(f'Database filled with {ratio}x data'))

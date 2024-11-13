@@ -1,8 +1,10 @@
 from django import forms
 from django.utils import timezone
 
-from back.models import User, Profile, Question, Tag, Answer
+from back.models import User, Profile, Post, Tag, Answer, PostFile
 from django.core.exceptions import ValidationError
+
+from django.forms import modelformset_factory
 
 
 class LoginForm(forms.Form):
@@ -17,7 +19,7 @@ class LoginForm(forms.Form):
         except:
             raise ValidationError('There is no selected user')
 
-    def save(self, **kwargs):
+    def save(self):
         username = self.cleaned_data.get('username')
         return User.objects.get(username=username)
 
@@ -36,6 +38,12 @@ class RegisterForm(forms.Form):
         repeat_password = self.cleaned_data.get('repeat_password')
         if password != repeat_password:
             raise ValidationError('Passwords do not match')
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise ValidationError("Username is already taken")
+        return username
 
     def is_password_valid(self):
         super(RegisterForm, self).clean()
@@ -76,27 +84,50 @@ class RegisterForm(forms.Form):
         return user
 
 
-class AskForm(forms.Form):
-    title = forms.CharField(min_length=3, max_length=30)
-    description = forms.CharField(widget=forms.Textarea)
-    tags = forms.CharField(required=True)
+class AskForm(forms.ModelForm):
+    tags = forms.CharField(
+        required=True,
+        label='Теги',
+        widget=forms.TextInput(attrs={'placeholder': 'Введите теги через пробел'}),
+    )
 
     class Meta:
-        model = Question
-        fields = ['title', 'description', 'tags']
+        model = Post
+        fields = ['content', 'tags', 'access_mode']  # Include 'access_mode' if needed
 
-    def save(self):
-        title = self.cleaned_data.get('title')
-        description = self.cleaned_data.get('description')
-        tags = self.cleaned_data.get('tags').split(' ')
-        date = timezone.now()
-        question = Question.objects.create(title=title, content=description, created_time=date)
-        for t in tags:
-            try:
-                question.tags.add(Tag.objects.get(tag_name=t))
-            except:
-                question.tags.add(Tag.objects.create(tag_name=t))
-        return question
+    def __init__(self, *args, **kwargs):
+        super(AskForm, self).__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            # Set initial as a plain string, joining tag names by a space
+            tag_names = ' '.join([tag.tag_name for tag in self.instance.tags.all()])
+            self.fields['tags'].initial = tag_names
+            # Debug statement to confirm the initial value is plain text
+            print("Debug - Initial tags set as plain text:", self.fields['tags'].initial)
+
+    def save(self, commit=True, author=None):
+        instance = super().save(commit=False)
+        if author:
+            instance.author = author
+        if commit:
+            instance.save()
+            # Clear existing tags and add new ones
+            instance.tags.clear()
+            tags = self.cleaned_data.get('tags').split()
+            for t in tags:
+                tag_obj, created = Tag.objects.get_or_create(tag_name=t)
+                instance.tags.add(tag_obj)
+        return instance
+
+
+# Update the widget to FileInput which supports multiple files
+PostFileFormSet = modelformset_factory(
+    PostFile,
+    fields=('file',),
+    extra=1,
+    max_num=10,
+    widgets={'file': forms.FileInput()},  # Remove multiple=True here
+    can_delete=True
+)
 
 
 class AnswerForm(forms.Form):
@@ -111,46 +142,69 @@ class AnswerForm(forms.Form):
         text = self.cleaned_data.get('text')
         return text
 
-    class Meta:
-        model = Answer
-        help_texts = {'text': 'Введите ответ'}
-
     def save(self):
         text = self.clean_text()
         ans = Answer.objects.create(answer=text, created_time=timezone.now())
         return ans
 
+    class Meta:
+        model = Answer
+        help_texts = {'text': 'Введите ответ'}
 
-class EditProfileForm(forms.Form):
+
+class EditProfileForm(forms.ModelForm):
     username = forms.CharField(required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    avatar = forms.ImageField(required=True, widget=forms.FileInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    avatar = forms.ImageField(required=False,
+                              widget=forms.FileInput(attrs={'class': 'form-control', 'id': 'avatar-input'}))
 
+    class Meta:
+        model = User
+        fields = ('username', 'email')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            profile = user.profile
+            profile.avatar_path = self.cleaned_data.get('avatar')
+            profile.save()
+        return user
+
+
+class ChangePasswordForm(forms.Form):
+    old_password = forms.CharField(
+        required=True,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label="Старый пароль"
+    )
+    new_password = forms.CharField(
+        required=True,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label="Новый пароль"
+    )
+    confirm_password = forms.CharField(
+        required=True,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label="Подтвердите новый пароль"
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super(ChangePasswordForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        cleaned_data = super(EditProfileForm, self).clean()
+        cleaned_data = super().clean()
+        old_password = cleaned_data.get('old_password')
+        new_password = cleaned_data.get('new_password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        # Проверка старого пароля
+        if not self.user.check_password(old_password):
+            self.add_error('old_password', 'Старый пароль введен неверно')
+
+        # Проверка совпадения нового пароля и подтверждения
+        if new_password and confirm_password and new_password != confirm_password:
+            self.add_error('confirm_password', 'Пароли не совпадают')
+
         return cleaned_data
-
-    def is_username_valid(self, old_username):
-        super(EditProfileForm, self).clean()
-        username = self.cleaned_data.get('username')
-
-        if old_username != username:
-            return False
-
-        return True
-
-    def clean_username(self):
-        username = self.data.get('username')
-        return username
-
-    def save(self, old_username):
-        if self.is_valid():
-            username = self.cleaned_data.get('username')
-            avatar = self.cleaned_data.get('avatar')
-
-            if self.is_username_valid(old_username):
-                user = User.objects.get(username=username)
-                user.profile.avatar_path = avatar
-                user.profile.save()
-            else:
-                self.add_error('username', 'Для подтверждения введите ваш никнейм')

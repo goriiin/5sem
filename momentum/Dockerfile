@@ -1,25 +1,27 @@
-FROM python:3.11.10-alpine3.20
+FROM python:3.11.4-slim-buster
 
-ENV APP_HOME=/usr/src/app
+# set work directory
+WORKDIR /usr/src/app
 
-WORKDIR $APP_HOME
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# install system dependencies
+RUN apt-get update && apt-get install -y netcat
 
-RUN apt-get update && apt-get install -y netcat-traditional
+# install dependencies
 RUN pip install --upgrade pip
+COPY ./requirements.txt .
+RUN pip install -r requirements.txt
 
-COPY requirements.txt ./
-
-RUN pip install --no-cache-dir -r requirements.txt
-
+# copy entrypoint.sh
 COPY ./entrypoint.sh .
 RUN sed -i 's/\r$//g' /usr/src/app/entrypoint.sh
 RUN chmod +x /usr/src/app/entrypoint.sh
 
-COPY . $APP_HOME
+# copy project
+COPY . .
 
-#CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-CMD ["gunicorn", "-b", "0.0.0.0:9009", "--workers", "2", "wsgi:application"]
+# run entrypoint.sh
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]

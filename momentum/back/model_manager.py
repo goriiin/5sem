@@ -3,7 +3,7 @@ import json
 from django.core.paginator import Paginator
 from django.db.models import F, Sum
 from back.forms import LoginForm, RegisterForm, AskForm, AnswerForm, EditProfileForm
-from back.models import Question, Answer, Tag, Profile, QuestionLike, AnswerLike
+from back.models import Post, Answer, Tag, Profile, PostLike, AnswerLike
 
 
 def get_popular_tags():
@@ -34,22 +34,16 @@ def get_signup_form(request):
     return RegisterForm()
 
 
-def get_ask(request):
-    if request.method == "POST":
-        return AskForm(data=request.POST)
-    return AskForm()
-
-
 def index_news():
-    return Question.objects.news()
+    return Post.objects.news()
 
 
 def tag_news(tag):
-    return Question.objects.filter(tags__tag_name=tag)
+    return Post.objects.filter(tags__tag_name=tag)
 
 
 def hot_news():
-    return Question.objects.hot()
+    return Post.objects.hot()
 
 
 def check_page(request):
@@ -83,7 +77,7 @@ def pagination(request, type_req, count=4, tag_name=None):
 def this_question(request, question_id, count=4):
     page_num = check_page(request)
     try:
-        question = Question.objects.get(pk=question_id)
+        question = Post.objects.get(pk=question_id)
     except:
         return {'page': -1}
 
@@ -104,11 +98,11 @@ def answer(request, question_id):
         form = AnswerForm(request.POST)
         if form.is_valid():
             a = form.save()
-            question = Question.objects.get(pk=question_id)
+            question = Post.objects.get(pk=question_id)
             a.question = question
             a.author = request.user.profile
             Profile.objects.filter(id=request.user.profile.id).update(answers_count=F('answers_count') + 1)
-            Question.objects.filter(id=question_id).update(answers_count=F('answers_count') + 1)
+            Post.objects.filter(id=question_id).update(answers_count=F('answers_count') + 1)
             a.save()
 
 
@@ -121,11 +115,11 @@ def like(request):
     # print(user)
     __id = body['id']
     if req_type == 'question':
-        q = Question.objects.get_queryset().get(pk=__id)
-        QuestionLike.objects.add_vote(user_id=user, question_id=q, vote=flag)
-        q.likes_count = QuestionLike.objects.filter(question_id=q.id).aggregate(Sum('vote'))['vote__sum']
+        q = Post.objects.get_queryset().get(pk=__id)
+        PostLike.objects.add_vote(user_id=user, question_id=q, vote=flag)
+        q.likes_count = PostLike.objects.filter(question_id=q.id).aggregate(Sum('vote'))['vote__sum']
         q.save()
-        return QuestionLike.objects.filter(question_id=__id).aggregate(Sum('vote'))['vote__sum']
+        return PostLike.objects.filter(question_id=__id).aggregate(Sum('vote'))['vote__sum']
     else:
         a = Answer.objects.get_queryset().get(pk=__id)
         AnswerLike.objects.add_vote(user_id=user, answer_id=a, vote=flag)

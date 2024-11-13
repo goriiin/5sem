@@ -2,12 +2,12 @@ BINARY_NAME=server
 
 S=sudo
 
-DC = docker compose
-STOP = docker stop
-LOG = docker logs
+DC = sudo docker compose
+STOP = sudo docker stop
+LOG = sudo docker logs
 
-RM = docker rm
-RMI = docker rmi
+RM = sudo docker rm
+RMI = sudo docker rmi
 
 NGINX_app = nginx-app
 NGINX_image = nginx-app-image
@@ -46,59 +46,60 @@ help:
 	@echo '   rm-all - удаляет все контейнеры'
 
 
-
+fill-100:
+	python3 manage.py fill_db 100
 
 install:
 	pip install -r requirements.txt
 
-app-run:
-	python3 manage.py runserver
+run:
+	python3 manage.py runserver 0.0.0.0:8888
 
 guni-run:
 	gunicorn -b 0.0.0.0:9009 momentum.wsgi:application &
 
 rm-all:
-	$(S) $(STOP) $(NGINX_app) $(APP) && $(S) $(RM) $(NGINX_app)
+	$(STOP) $(NGINX_app) $(APP) && $(RM) $(NGINX_app)
 
 save:
 	pip freeze > requirements.txt
 
 ps:
-	$(S) docker ps
+	docker ps
 
 psa:
 	$(S) docker ps -a
 
 build:
-	$(S) docker build -t app-image .
+	docker build -t app-image .
 
-run:
-	$(S) $(DC) up -d
+#run:
+#	$(DC) up -d
 
 r-nginx:
-	$(S) $(STOP) $(NGINX_app) && $(RM)  $(NGINX_app) && $(RMI) $(NGINX_image) && $(DC) up -d
+	 $(STOP) $(NGINX_app) &&  $(RM)  $(NGINX_app) &&  $(RMI) $(NGINX_image) &&  $(DC) up -d
 
 r-guni:
-	$(S) $(STOP) $(GUNI_app) && $(RM) $(GUNI_app) && $(RMI) $(GUNI_image) && $(DC) up -d
+	 $(STOP) $(GUNI_app) && $(RM) $(GUNI_app) && $(RMI) $(GUNI_image) &&  $(DC) up -d
 
 r-app:
-	$(S) $(STOP) $(APP) && $(RM) $(APP) && $(RMI) $(APP_image) && $(DC) up -d
+	$(STOP) $(APP) && $(RM) $(APP) && $(RMI) $(APP_image) &&  $(DC) up -d
 
 r-all:
-	$(S) make r-nginx
-	$(S) make r-guni
-	$(S) make r-app
+	make r-nginx
+	make r-guni
+	make r-app
 
 log-nginx:
-	$(S) $(LOG) $(NGINX_app)
+	$(LOG) $(NGINX_app)
 
 log-guni:
-	$(S) $(LOG) $(GUNI_app)
+	$(LOG) $(GUNI_app)
 
 log-app:
-	$(S) $(LOG) $(APP)
+	$(LOG) $(APP)
 
 down:
-	$(S) $(DC) down
+	$(DC) down
 
 .PHONY: clean build
