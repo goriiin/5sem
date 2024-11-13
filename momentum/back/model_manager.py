@@ -34,16 +34,19 @@ def get_signup_form(request):
     return RegisterForm()
 
 
-def index_news():
-    return Post.objects.news()
+def index_news(request):
+    user_profile = request.user.profile if request.user.is_authenticated else None
+    return Post.objects.news(user_profile=user_profile)
+
+
+def hot_news(request):
+    user_profile = request.user.profile if request.user.is_authenticated else None
+    return Post.objects.hot(user_profile=user_profile)
 
 
 def tag_news(tag):
     return Post.objects.filter(tags__tag_name=tag)
 
-
-def hot_news():
-    return Post.objects.hot()
 
 
 def check_page(request):
@@ -60,18 +63,19 @@ def check_page(request):
 def pagination(request, type_req, count=4, tag_name=None):
     page_num = check_page(request)
     items = ''
+    user_profile = request.user.profile if request.user.is_authenticated else None
+
     if type_req == 'index':
-        items = index_news()
+        items = index_news(request)
     elif type_req == 'tag':
-        items = tag_news(tag_name)
+        items = tag_news(tag_name).visible_to_user(user_profile)
     elif type_req == 'hot':
-        items = hot_news()
+        items = hot_news(request)
 
     paginator = Paginator(items, count)
     items = paginator.get_page(page_num)
 
-    return {'questions': items,
-            'paginator': paginator}
+    return {'questions': items, 'paginator': paginator}
 
 
 def this_question(request, question_id, count=4):

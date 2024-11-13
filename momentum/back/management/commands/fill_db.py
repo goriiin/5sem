@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from back.models import Profile, Post, Answer, Tag, AnswerLike, PostLike
+from back.models import Profile, Post, Answer, Tag, AnswerLike, PostLike, Subscription
 from django.contrib.auth.models import User
 import random
 from faker import Faker
@@ -109,5 +109,18 @@ class Command(BaseCommand):
         # Пересчитываем рейтинг для каждого ответа
         for answer in Answer.objects.all():
             answer.recalculate_likes()
+
+        # Create subscriptions
+        subscriptions_set = set()
+        subscriptions = []
+        for profile in profiles:
+            num_subscriptions = random.randint(0, 10)
+            following_profiles = random.sample([p for p in profiles if p != profile], num_subscriptions)
+            for followed_profile in following_profiles:
+                key = (profile.id, followed_profile.id)
+                if key not in subscriptions_set:
+                    subscriptions_set.add(key)
+                    subscriptions.append(Subscription(follower=profile, followed=followed_profile))
+        Subscription.objects.bulk_create(subscriptions)
 
         self.stdout.write(self.style.SUCCESS(f'Database filled with {ratio}x data'))

@@ -2,6 +2,22 @@ a {
     color: #1f75fe;
     text-decoration: none;
 }
+.ui-autocomplete {
+    z-index: 1051;
+    max-height: 200px;
+    overflow-y: auto;
+    /* Prevent horizontal scrollbar */
+    overflow-x: hidden;
+}
+
+.ui-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.ui-menu-item:hover {
+    background-color: #eee;
+}
 
 a:hover {
     color: #6495ed;

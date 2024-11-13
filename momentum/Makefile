@@ -53,7 +53,7 @@ install:
 	pip install -r requirements.txt
 
 run:
-	python3 manage.py runserver 0.0.0.0:8888
+	python3 manage.py runserver localhost:8888
 
 guni-run:
 	gunicorn -b 0.0.0.0:9009 momentum.wsgi:application &

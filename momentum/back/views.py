@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect
 
 from back import model_manager
 from back.forms import EditProfileForm, ChangePasswordForm, AskForm
-from back.models import PostFile, Subscription, Profile, PostLike, Post
+from back.models import PostFile, Subscription, Profile, PostLike, Post, Tag
 
 
 def index(request):
@@ -149,15 +149,18 @@ def like(request):
     return JsonResponse({'count': count})
 
 
+@login_required(login_url='login')
 def profile(request, username=None):
     # Get the profile by username or fallback to current user if username is None
     profile_user = get_object_or_404(Profile, user__username=username) if username else request.user.profile
 
-    # Retrieve all posts by this user
-    user_posts = Post.objects.filter(author=profile_user).order_by('-created_time')
-
     # Determine if the current user follows the profile user
     is_following = Subscription.objects.filter(follower=request.user.profile, followed=profile_user).exists()
+
+    # Retrieve posts by this user, filtering based on subscription status
+    user_posts = Post.objects.filter(author=profile_user).visible_to_user(
+        request.user.profile if request.user.is_authenticated else None
+    ).order_by('-created_time')
 
     context = {
         'profile_user': profile_user,
@@ -172,7 +175,7 @@ def profile(request, username=None):
     return render(request, 'profile.html', context)
 
 
-@login_required
+@login_required(login_url='login')
 def follow_user(request, username):
     followed_user = get_object_or_404(Profile, user__username=username)
     if followed_user != request.user.profile:
@@ -180,14 +183,14 @@ def follow_user(request, username):
     return redirect('user_profile', username=username)
 
 
-@login_required
+@login_required(login_url='login')
 def unfollow_user(request, username):
     followed_user = get_object_or_404(Profile, user__username=username)
     Subscription.objects.filter(follower=request.user.profile, followed=followed_user).delete()
     return redirect('user_profile', username=username)
 
 
-@login_required
+@login_required(login_url='login')
 def edit_post(request, post_id):
     post = get_object_or_404(Post, id=post_id, author=request.user.profile)
     if request.method == 'POST':
@@ -207,7 +210,7 @@ def edit_post(request, post_id):
                   )
 
 
-@login_required
+@login_required(login_url='login')
 def delete_post(request, post_id):
     post = get_object_or_404(Post, id=post_id, author=request.user.profile)
     if request.method == 'POST':
@@ -222,7 +225,7 @@ def delete_post(request, post_id):
                    'pop_users': model_manager.get_popular_users()},
                   )
 
-
+@login_required(login_url='login')
 def followers_list(request, username=None):
     profile_user = get_object_or_404(Profile, user__username=username)
     followers = profile_user.followers.all()
@@ -233,3 +236,66 @@ def followers_list(request, username=None):
     }
 
     return render(request, 'followers_list.html', context)
+
+
+@login_required(login_url='login')
+def following_list(request, username):
+    profile_user = get_object_or_404(Profile, user__username=username)
+    following = profile_user.following.all()
+
+    context = {
+        'profile_user': profile_user,
+        'following': following,
+    }
+
+    return render(request, 'following_list.html', context)
+
+
+def search(request):
+    query = request.GET.get('q', '')
+    posts = Post.objects.none()
+    users = Profile.objects.none()
+    tags = Tag.objects.none()
+    if query:
+        if query.startswith('#'):
+            # If the query starts with '#', search tags
+            tag_query = query[1:]
+            tags = Tag.objects.filter(tag_name__icontains=tag_query)
+            posts = Post.objects.filter(tags__tag_name__icontains=tag_query).distinct().order_by('-created_time')
+        else:
+            # Search posts by content and tags
+            posts_content = Post.objects.filter(content__icontains=query)
+            posts_tags = Post.objects.filter(tags__tag_name__icontains=query)
+            posts = (posts_content | posts_tags).distinct().order_by('-created_time')
+
+            # Search users
+            users = Profile.objects.filter(user__username__icontains=query)
+
+            # Search tags
+            tags = Tag.objects.filter(tag_name__icontains=query)
+
+    context = {
+        'query': query,
+        'posts': posts,
+        'users': users,
+        'tags': tags,
+        'pop_tags': model_manager.get_popular_tags(),
+        'pop_users': model_manager.get_popular_users(),
+    }
+    return render(request, 'search_results.html', context)
+
+
+def get_suggestions(request):
+    query = request.GET.get('term', '')
+    suggestions = []
+    if query:
+        # Suggest users
+        usernames = Profile.objects.filter(user__username__istartswith=query).values_list('user__username', flat=True)[
+                    :5]
+        suggestions.extend(usernames)
+
+        # Suggest tags
+        tag_names = Tag.objects.filter(tag_name__istartswith=query).values_list('tag_name', flat=True)[:5]
+        suggestions.extend(f'#{tag}' for tag in tag_names)
+
+    return JsonResponse(suggestions, safe=False)

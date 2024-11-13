@@ -36,7 +36,8 @@
                 <p>
                     <strong>Подписчики:</strong>
                     <a href="{% url 'followers_list' profile_user.user.username %}">{{ followers }}</a> |
-                    <strong>Подписки:</strong> {{ following }}
+                    <strong>Подписки:</strong>
+                    <a href="{% url 'following_list' profile_user.user.username %}">{{ following }}</a>
                 </p>
             </div>
 

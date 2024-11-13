@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{% static 'bootstrap-5.3.3-dist/css/bootstrap.css' %}">
     <link rel="shortcut icon" href='{% static "img/terminal_black_24dp.svg" %}'/>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet"
+      href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
 </head>
 <body class="main">
 <div>
@@ -35,7 +37,8 @@
                 <h3 class="mt-5 white">Активные пользователи</h3>
                 <div>
                     {% for u in pop_users %}
-                        <a href="{% url 'user_profile' u.user.username %}" class="d-block link-success">{{ u.user.username }}</a>
+                        <a href="{% url 'user_profile' u.user.username %}"
+                           class="d-block link-success">{{ u.user.username }}</a>
                     {% endfor %}
                 </div>
             </div>
@@ -43,6 +46,22 @@
     </main>
 </div>
 <script src="{% static 'bootstrap-5.3.3-dist/js/bootstrap.bundle.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#search-input').autocomplete({
+            source: "{% url 'get_suggestions' %}",
+            minLength: 2,
+            select: function (event, ui) {
+                $('#search-input').val(ui.item.value);
+                $(this).closest('form').submit();
+            }
+        });
+    });
+</script>
+
 <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 from datetime import timedelta
-
+from django.db.models import Q
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum
@@ -75,7 +75,7 @@ class Profile(models.Model):
 
 class PostQueryset(models.QuerySet):
     def order_rating(self):
-        return self.order_by('-created_time').order_by('-likes_count')
+        return self.order_by('-created_time', '-likes_count')
 
     def order_time(self):
         return self.order_by('-created_time')
@@ -90,17 +90,30 @@ class PostQueryset(models.QuerySet):
         # Увеличиваем счетчик ответов для вопроса
         self.filter(id=question_id).update(answers_count=models.F('answers_count') + 1)
 
+    def visible_to_user(self, user_profile):
+        # Returns posts based on the user's subscription status
+        if user_profile:
+            return self.filter(
+                Q(access_mode='public') |
+                Q(access_mode='subscribers', author__followers__follower=user_profile)
+            ).distinct()
+        else:
+            # For unauthenticated users, only return public posts
+            return self.filter(access_mode='public')
+
 
 class PostManager(models.Manager):
     def get_queryset(self):
         return PostQueryset(self.model, using=self._db)
 
-    def hot(self):
+    def hot(self, user_profile=None):
         one_week_ago = timezone.now() - timedelta(days=7)
-        return self.get_queryset().order_rating().filter(created_time__gte=one_week_ago)
+        # Calls `visible_to_user` and `order_rating` from PostQueryset
+        return self.get_queryset().visible_to_user(user_profile).order_rating().filter(created_time__gte=one_week_ago)
 
-    def news(self):
-        return self.get_queryset().order_time()
+    def news(self, user_profile=None):
+        # Calls `visible_to_user` and `order_time` from PostQueryset
+        return self.get_queryset().visible_to_user(user_profile).order_time()
 
     def get_tags(self):
         return self.get_queryset().get_tags()

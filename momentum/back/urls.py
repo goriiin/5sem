@@ -23,6 +23,9 @@ urlpatterns = [
     path('follow/<str:username>/', views.follow_user, name='follow_user'),
     path('unfollow/<str:username>/', views.unfollow_user, name='unfollow_user'),
     path('profile/<str:username>/followers/', views.followers_list, name='followers_list'),
+    path('profile/<str:username>/following/', views.following_list, name='following_list'),
+    path('search/', views.search, name='search'),
+    path('suggestions/', views.get_suggestions, name='get_suggestions'),
 ]
 
 if settings.DEBUG:

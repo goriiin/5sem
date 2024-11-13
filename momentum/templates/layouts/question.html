@@ -13,7 +13,7 @@
                         </div>
                     </div>
                     <div class="col-5">
-                        <a style="font-weight: 500; font-size: 15px">{{ item.author }}</a>
+                        <a style="font-weight: 500; font-size: 15px" class="link-success" href="{% url 'user_profile' item.author %}">{{ item.author }}</a>
                     </div>
                        <div class="text-muted text-end col">
                         Created at: {{ item.created_time }}
