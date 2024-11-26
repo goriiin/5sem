@@ -3,70 +3,68 @@
 python3 my_uml.py
 
 
-
 ```mermaid
 erDiagram
-
     %% Entity Definitions
-
-    Пользователь {
-        STRING имя_пользователя
-        STRING электронная_почта
+    
+    User {
+        STRING username
+        STRING email
     }
 
-    Профиль {
-        STRING аватар
-        INT количество_ответов
-        DATETIME время_обновления
-        INT количество_подписчиков
+    Profile {
+        STRING avatar
+        INT answer_count
+        DATETIME updated_at
+        INT follower_count
     }
 
-    Тег {
-        STRING название_тега
-        INT использований
+    Tag {
+        STRING tag_name
+        INT usage_count
     }
 
-    Пост {
-        STRING содержимое
-        DATETIME время_создания
-        INT количество_лайков
-        INT количество_ответов
-        STRING режим_доступа
+    Post {
+        STRING content
+        DATETIME created_at
+        INT like_count
+        INT answer_count
+        STRING access_mode
     }
 
-    Ответ {
-        TEXT текст_ответа
-        DATETIME время_создания
-        INT количество_лайков
+    Answer {
+        TEXT answer_text
+        DATETIME created_at
+        INT like_count
     }
 
-    ЛайкПоста {
-        INT оценка
+    PostLike {
+        INT rating
     }
 
-    ЛайкОтвета {
-        INT оценка
+    AnswerLike {
+        INT rating
     }
 
-    Подписка {
-        DATETIME время_создания
+    Subscription {
+        DATETIME created_at
     }
 
-    ФайлПоста {
-        FILE файл
+    PostFile {
+        FILE file
     }
 
     %% Relationships
 
-    Пользователь ||--o{ Профиль : "имеет"
-    Профиль ||--o{ Пост : "создает"
-    Профиль ||--o{ Ответ : "пишет"
-    Профиль ||--o| Профиль : "подписчики"
-    Пост ||--o{ Ответ : "имеет ответы"
-    Пост ||--o{ ЛайкПоста : "лайки"
-    Ответ ||--o{ ЛайкОтвета : "лайки"
-    Пост ||--o{ Тег : "связан с тегами"
-    Пост ||--o{ ФайлПоста : "содержит файлы"
-    Профиль ||--o{ Подписка : "является подписчиком"
-    Профиль ||--o{ Подписка : "подписан на"
+    User ||--o{ Profile : "has"
+    Profile ||--o{ Post : "creates"
+    Profile ||--o{ Answer : "writes"
+    Profile ||--o| Profile : "followers"
+    Post ||--o{ Answer : "has answers"
+    Post ||--o{ PostLike : "likes"
+    Answer ||--o{ AnswerLike : "likes"
+    Post ||--o{ Tag : "is tagged with"
+    Post ||--o{ PostFile : "contains files"
+    Profile ||--o{ Subscription : "is subscriber"
+    Profile ||--o{ Subscription : "subscribed to"
 ```
