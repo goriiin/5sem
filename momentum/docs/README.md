@@ -7,6 +7,8 @@ python3 my_uml.py
 ```mermaid
 erDiagram
 
+    %% Entity Definitions
+
     Пользователь {
         STRING имя_пользователя
         STRING электронная_почта
