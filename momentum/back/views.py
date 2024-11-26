@@ -149,15 +149,13 @@ def like(request):
     return JsonResponse({'count': count})
 
 
-@login_required(login_url='login')
 def profile(request, username=None):
-    # Get the profile by username or fallback to current user if username is None
-    profile_user = get_object_or_404(Profile, user__username=username) if username else request.user.profile
+    profile_user = get_object_or_404(Profile, user__username=username) if username else None
 
-    # Determine if the current user follows the profile user
-    is_following = Subscription.objects.filter(follower=request.user.profile, followed=profile_user).exists()
+    is_following = False
+    if request.user.is_authenticated and profile_user:
+        is_following = Subscription.objects.filter(follower=request.user.profile, followed=profile_user).exists()
 
-    # Retrieve posts by this user, filtering based on subscription status
     user_posts = Post.objects.filter(author=profile_user).visible_to_user(
         request.user.profile if request.user.is_authenticated else None
     ).order_by('-created_time')
@@ -166,8 +164,8 @@ def profile(request, username=None):
         'profile_user': profile_user,
         'user_posts': user_posts,
         'is_following': is_following,
-        'followers': profile_user.followers.count(),
-        'following': profile_user.following.count(),
+        'followers': profile_user.followers.count() if profile_user else 0,
+        'following': profile_user.following.count() if profile_user else 0,
         'pop_tags': model_manager.get_popular_tags(),
         'pop_users': model_manager.get_popular_users(),
     }
@@ -252,26 +250,29 @@ def following_list(request, username):
 
 
 def search(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()
     posts = Post.objects.none()
     users = Profile.objects.none()
     tags = Tag.objects.none()
+
+    # Проверяем, что запрос не пустой
     if query:
         if query.startswith('#'):
-            # If the query starts with '#', search tags
-            tag_query = query[1:]
+            # Поиск по тегам
+            tag_query = query[1:]  # Убираем символ #
             tags = Tag.objects.filter(tag_name__icontains=tag_query)
             posts = Post.objects.filter(tags__tag_name__icontains=tag_query).distinct().order_by('-created_time')
         else:
-            # Search posts by content and tags
+            # Поиск постов по содержимому
             posts_content = Post.objects.filter(content__icontains=query)
+            # Поиск постов по тегам
             posts_tags = Post.objects.filter(tags__tag_name__icontains=query)
             posts = (posts_content | posts_tags).distinct().order_by('-created_time')
 
-            # Search users
+            # Поиск пользователей
             users = Profile.objects.filter(user__username__icontains=query)
 
-            # Search tags
+            # Поиск тегов
             tags = Tag.objects.filter(tag_name__icontains=query)
 
     context = {
@@ -282,6 +283,13 @@ def search(request):
         'pop_tags': model_manager.get_popular_tags(),
         'pop_users': model_manager.get_popular_users(),
     }
+
+    # Для отладки: вывести содержимое переменных в консоль
+    print(f"Query: {query}")
+    print(f"Posts: {posts}")
+    print(f"Users: {users}")
+    print(f"Tags: {tags}")
+
     return render(request, 'search_results.html', context)
 
 
