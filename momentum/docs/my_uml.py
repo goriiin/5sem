@@ -4,7 +4,7 @@ import subprocess
 # Укажите путь к сохранению диаграмм и путь к plantuml.jar
 uml_path = os.path.join(os.getcwd(), 'uml_diagrams')
 os.makedirs(uml_path, exist_ok=True)
-plantuml_jar_path = './plantuml-1.2024.7.jar'  # Укажите здесь путь к plantuml.jar
+plantuml_jar_path = './docs/plantuml-1.2024.7.jar'  # Укажите здесь путь к plantuml.jar
 
 
 # Функция для записи PlantUML диаграмм в файл
@@ -23,22 +23,25 @@ def generate_diagram(file_path):
         print(f"Ошибка при генерации диаграммы {file_path}: {e}")
 
 
+# todo наследование/пересечение вариантов использования, пересекаются ли векторы по вариантам (например создатель и зарег пользователь
 # 5.3.1 Диаграмма вариантов использования (Use Case Diagram)
 use_case_diagram_code = """
 @startuml
-actor "Пользователь" as User
-actor "Администратор" as Admin
+actor "Неаунтефицированный пользователь" as noAuthUser
+actor "Зарегестрированный пользователь" as AuthUser
+actor "Создатель поста" as Creator
 
-User -> (Вход в систему)
-User -> (Регистрация)
-User -> (Просмотр поста)
-User -> (Поставить лайк)
-User -> (Ответить на вопрос)
-User -> (Подписаться на пользователя)
-User -> (Поиск контента)
+noAuthUser -> (Вход в систему)
+noAuthUser -> (Регистрация)
+noAuthUser  -> (Просмотр ленты новостей)
 
-Admin -> (Управление постами)
-Admin -> (Удаление постов)
+AuthUser  -> (Поставить лайк)
+AuthUser  -> (Ответить на вопрос)
+AuthUser -> (Подписаться на пользователя)
+AuthUser -> (Поиск контента)
+
+Creator -> (Редактирование)
+Creator-> (Удаление)
 @enduml
 """
 use_case_diagram_path = create_uml_file("use_case_diagram.puml", use_case_diagram_code)
