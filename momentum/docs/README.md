@@ -4,6 +4,7 @@ python3 my_uml.py
 
 
 ```mermaid
+%%{ init: { 'theme': 'neutral' } }%%
 erDiagram
     %% Entity Definitions
     
