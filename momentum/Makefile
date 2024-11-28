@@ -46,6 +46,9 @@ help:
 	@echo '   rm-all - удаляет все контейнеры'
 
 
+doc:
+	python3 ./docs/my_uml.py
+
 fill-100:
 	python3 manage.py fill_db 100
 

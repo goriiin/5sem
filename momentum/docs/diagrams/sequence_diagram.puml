@@ -1,0 +1,34 @@
+
+@startuml
+skinparam DefaultFontSize 25
+skinparam ParticipantFontSize 16
+skinparam ActorFontSize 25
+skinparam ParticipantPadding 20
+skinparam BoxPadding 25
+
+actor User
+participant "Клиент" as Browser
+participant "Сервер" as Backend
+participant "База Данных" as Database
+
+User -> Browser: Запрос "Подписаться"
+Browser -> Backend: Отправка запроса на подписку
+Backend -> Database: Проверить, вошел ли пользователь
+Database --> Backend: Ответ (Пользователь не аутентифицирован)
+
+alt Пользователь не аутентифицирован
+    Backend -> Browser: Перенаправление на страницу входа
+    Browser -> Backend: Отправка учетных данных
+    Backend -> Database: Проверка учетных данных
+    Database --> Backend: Учетные данные верны
+    Backend -> Browser: Перенаправление обратно в профиль
+end
+
+Browser -> Backend: Повторный запрос "Подписаться"
+Backend -> Database: Проверить наличие подписки
+Database --> Backend: Подписка отсутствует
+Backend -> Database: Создание подписки
+Database --> Backend: Подписка создана
+Backend -> Browser: Уведомление об успешной подписке
+Browser -> User: Вы подписались на пользователя
+@enduml

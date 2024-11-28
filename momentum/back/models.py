@@ -108,12 +108,10 @@ class PostManager(models.Manager):
 
     def hot(self, user_profile=None):
         one_week_ago = timezone.now() - timedelta(days=7)
-        # Calls `visible_to_user` and `order_rating` from PostQueryset
-        return self.get_queryset().visible_to_user(user_profile).order_rating().filter(created_time__gte=one_week_ago)
+        return self.get_queryset().visible_to_user(user_profile).order_by('-likes_count').filter(created_time__gte=one_week_ago)
 
     def news(self, user_profile=None):
-        # Calls `visible_to_user` and `order_time` from PostQueryset
-        return self.get_queryset().visible_to_user(user_profile).order_time()
+        return self.get_queryset().visible_to_user(user_profile).order_by('-created_time')
 
     def get_tags(self):
         return self.get_queryset().get_tags()
