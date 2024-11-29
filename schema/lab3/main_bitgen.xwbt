@@ -1,8 +1,0 @@
-INTSTYLE=ise
-INFILE=/home/user/lab2_o_gore/main.ncd
-OUTFILE=/home/user/lab2_o_gore/main.bit
-FAMILY=Spartan3
-PART=xc3s200-5ft256
-WORKINGDIR=/home/user/lab2_o_gore
-LICENSE=WebPack
-USER_INFO=__0_0_0
