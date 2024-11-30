@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect
@@ -31,10 +31,15 @@ def question(request, question_id):
     context['pop_tags'] = model_manager.get_popular_tags()
     context['pop_users'] = model_manager.get_popular_users()
 
-    # if question.access_mode == 'subscribers':
-    #     if not request.user.is_authenticated or not Subscription.objects.filter(follower=request.user.profile,
-    #                                                                             followed=question.author).exists():
-    #         return HttpResponseForbidden("Доступ только для подписчиков")
+    try:
+        q = Post.objects.get(pk=question_id)
+        user_profile = request.user.profile if request.user.is_authenticated else None
+        if q.access_mode == 'subscribers' and (
+                not user_profile or not Subscription.objects.filter(follower=user_profile, followed=q.author).exists()
+        ):
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    except Post.DoesNotExist:
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
     if request.method == 'POST':
         model_manager.answer(request, question_id)
@@ -123,7 +128,7 @@ def settings(request):
                 new_password = password_form.cleaned_data.get('new_password')
                 request.user.set_password(new_password)
                 request.user.save()
-                update_session_auth_hash(request, request.user)  # Обновить сессию, чтобы не разлогинить пользователя
+                update_session_auth_hash(request, request.user)
                 return redirect(reverse('index'))
 
     return render(
@@ -222,6 +227,7 @@ def delete_post(request, post_id):
                    'pop_tags': model_manager.get_popular_tags(),
                    'pop_users': model_manager.get_popular_users()},
                   )
+
 
 @login_required(login_url='login')
 def followers_list(request, username=None):
