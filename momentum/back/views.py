@@ -155,10 +155,16 @@ def like(request):
 
 
 def profile(request, username=None):
-    profile_user = get_object_or_404(Profile, user__username=username) if username else None
+    if username is None:
+        if request.user.is_authenticated:
+            username = request.user.username
+        else:
+            return redirect('login')  # Or handle unauthenticated access
+
+    profile_user = get_object_or_404(Profile, user__username=username)
 
     is_following = False
-    if request.user.is_authenticated and profile_user:
+    if request.user.is_authenticated:
         is_following = Subscription.objects.filter(follower=request.user.profile, followed=profile_user).exists()
 
     user_posts = Post.objects.filter(author=profile_user).visible_to_user(
@@ -169,8 +175,8 @@ def profile(request, username=None):
         'profile_user': profile_user,
         'user_posts': user_posts,
         'is_following': is_following,
-        'followers': profile_user.followers.count() if profile_user else 0,
-        'following': profile_user.following.count() if profile_user else 0,
+        'followers': profile_user.followers.count(),
+        'following': profile_user.following.count(),
         'pop_tags': model_manager.get_popular_tags(),
         'pop_users': model_manager.get_popular_users(),
     }
