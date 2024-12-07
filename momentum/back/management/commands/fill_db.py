@@ -21,7 +21,8 @@ class Command(BaseCommand):
         # Создание пользователей
         users = []
         for i in range(ratio):
-            user = User(username=fake.user_name() + f"{i}", email=f"{i}" + fake.email())
+            num = fake.random_number()
+            user = User(username=fake.user_name() + f"{num}", email=f"{num}" + fake.email())
             user.set_password('123456')
             users.append(user)
         User.objects.bulk_create(users)
@@ -109,18 +110,15 @@ class Command(BaseCommand):
         # Пересчитываем рейтинг для каждого ответа
         for answer in Answer.objects.all():
             answer.recalculate_likes()
-
-        # Create subscriptions
-        subscriptions_set = set()
+        #
+        profiles = Profile.objects.all()  # Получаем все профили
         subscriptions = []
-        for profile in profiles:
-            num_subscriptions = random.randint(0, 10)
-            following_profiles = random.sample([p for p in profiles if p != profile], num_subscriptions)
-            for followed_profile in following_profiles:
-                key = (profile.id, followed_profile.id)
-                if key not in subscriptions_set:
-                    subscriptions_set.add(key)
-                    subscriptions.append(Subscription(follower=profile, followed=followed_profile))
+
+        for follower in profiles:
+            for followed in profiles:
+                if follower != followed:  # Исключаем подписку на самого себя
+                    subscriptions.append(Subscription(follower=follower, followed=followed))
+
         Subscription.objects.bulk_create(subscriptions)
 
         self.stdout.write(self.style.SUCCESS(f'Database filled with {ratio}x data'))
