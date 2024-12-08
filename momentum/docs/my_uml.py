@@ -213,7 +213,6 @@ alt Пользователь не аутентифицирован
     Backend -> Browser: Перенаправление обратно в профиль
 end
 
-Browser -> Backend: Повторный запрос "Подписаться"
 Backend -> Database: Проверить наличие подписки
 Database --> Backend: Подписка отсутствует
 Backend -> Database: Создание подписки

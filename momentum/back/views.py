@@ -243,7 +243,11 @@ def followers_list(request, username=None):
     context = {
         'profile_user': profile_user,
         'followers': followers,
+        'pop_tags': model_manager.get_popular_tags(),
+        'pop_users': model_manager.get_popular_users(),
     }
+
+
 
     return render(request, 'followers_list.html', context)
 
@@ -256,7 +260,10 @@ def following_list(request, username):
     context = {
         'profile_user': profile_user,
         'following': following,
+        'pop_tags': model_manager.get_popular_tags(),
+        'pop_users': model_manager.get_popular_users(),
     }
+
 
     return render(request, 'following_list.html', context)
 

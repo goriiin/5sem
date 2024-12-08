@@ -14,7 +14,7 @@
             <img src="{{ profile_user.avatar_path.url }}" class="img-fluid rounded-start" alt="..."
                  style="max-height: 200px; object-fit: cover;">
             <br>
-            <p><strong>С нами с:</strong> {{ profile_user.user.date_joined|date:"j E Y" }}</p>
+            <p><strong>Зарегистрирован:</strong> {{ profile_user.user.date_joined|date:"j E Y" }}</p>
 
             {% if request.user == profile_user.user %}
                 <a href="{% url 'settings' %}">К настройкам профиля</a>

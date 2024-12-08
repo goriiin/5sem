@@ -54,7 +54,7 @@ class ProfileManager(models.Manager):
 
 class Profile(models.Model):
     updated_time = models.DateTimeField(auto_now=True)
-    avatar_path = models.ImageField(upload_to='images', default='default.jpg')
+    avatar_path = models.ImageField(upload_to='images', default='default3.jpg')
     answers_count = models.PositiveIntegerField(default=0)
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
