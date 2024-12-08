@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import RegexValidator, MaxLengthValidator
 from django.utils import timezone
 
 from back.models import User, Profile, Post, Tag, Answer, PostFile
@@ -26,7 +27,11 @@ class LoginForm(forms.Form):
 
 class RegisterForm(forms.Form):
     email = forms.EmailField(required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    username = forms.CharField(required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    username = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        validators=[RegexValidator(regex='^[0-9a-zA-Z]*$', message='Username can only contain letters and digits')]
+    )
     avatar = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'form-control'}))
 
     password = forms.CharField(widget=forms.PasswordInput, min_length=4, required=True)
@@ -71,7 +76,7 @@ class RegisterForm(forms.Form):
         repeat_password = self.cleaned_data.get('repeat_password')
 
         if password != repeat_password:
-            return ValidationError('Passwords do not match')
+            raise ValidationError('Passwords do not match')
 
         user = User.objects.create_user(
             username=username,
@@ -85,6 +90,12 @@ class RegisterForm(forms.Form):
 
 
 class AskForm(forms.ModelForm):
+    # Добавляем ограничение длины content до 1000 символов
+    content = forms.CharField(
+        widget=forms.Textarea,
+        validators=[MaxLengthValidator(1000)]
+    )
+
     tags = forms.CharField(
         required=True,
         label='Теги',
@@ -93,15 +104,14 @@ class AskForm(forms.ModelForm):
 
     class Meta:
         model = Post
-        fields = ['content', 'tags', 'access_mode']  # Include 'access_mode' if needed
+        fields = ['content', 'tags', 'access_mode']
 
     def __init__(self, *args, **kwargs):
         super(AskForm, self).__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
-            # Set initial as a plain string, joining tag names by a space
             tag_names = ' '.join([tag.tag_name for tag in self.instance.tags.all()])
             self.fields['tags'].initial = tag_names
-            # Debug statement to confirm the initial value is plain text
+            # Debug statement
             print("Debug - Initial tags set as plain text:", self.fields['tags'].initial)
 
     def save(self, commit=True, author=None):
@@ -110,7 +120,6 @@ class AskForm(forms.ModelForm):
             instance.author = author
         if commit:
             instance.save()
-            # Clear existing tags and add new ones
             instance.tags.clear()
             tags = self.cleaned_data.get('tags').split()
             for t in tags:
@@ -119,23 +128,26 @@ class AskForm(forms.ModelForm):
         return instance
 
 
-# Update the widget to FileInput which supports multiple files
 PostFileFormSet = modelformset_factory(
     PostFile,
     fields=('file',),
     extra=1,
     max_num=10,
-    widgets={'file': forms.FileInput()},  # Remove multiple=True here
+    widgets={'file': forms.FileInput()},
     can_delete=True
 )
 
 
 class AnswerForm(forms.Form):
-    text = forms.CharField(widget=forms.Textarea)
+    text = forms.CharField(
+        widget=forms.Textarea,
+        validators=[MaxLengthValidator(1000, message='Максимальная длина комментария — 1000 символов.')]
+    )
 
     class Meta:
         model = Answer
         fields = ['description']
+        help_texts = {'text': 'Введите ответ'}
 
     def clean_text(self):
         super(AnswerForm, self).clean()
@@ -147,16 +159,18 @@ class AnswerForm(forms.Form):
         ans = Answer.objects.create(answer=text, created_time=timezone.now())
         return ans
 
-    class Meta:
-        model = Answer
-        help_texts = {'text': 'Введите ответ'}
-
 
 class EditProfileForm(forms.ModelForm):
-    username = forms.CharField(required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    username = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        validators=[RegexValidator(regex='^[0-9a-zA-Z]*$', message='Username can only contain letters and digits')]
+    )
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    avatar = forms.ImageField(required=False,
-                              widget=forms.FileInput(attrs={'class': 'form-control', 'id': 'avatar-input'}))
+    avatar = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'form-control', 'id': 'avatar-input'})
+    )
 
     class Meta:
         model = User
@@ -199,11 +213,9 @@ class ChangePasswordForm(forms.Form):
         new_password = cleaned_data.get('new_password')
         confirm_password = cleaned_data.get('confirm_password')
 
-        # Проверка старого пароля
         if not self.user.check_password(old_password):
             self.add_error('old_password', 'Старый пароль введен неверно')
 
-        # Проверка совпадения нового пароля и подтверждения
         if new_password and confirm_password and new_password != confirm_password:
             self.add_error('confirm_password', 'Пароли не совпадают')
 
