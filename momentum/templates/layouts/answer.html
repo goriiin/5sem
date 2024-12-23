@@ -10,20 +10,18 @@
                         class="img-fluid rounded-start"
                         alt="..."/>
             </div>
-            
-            
-
         </div>
-
         <div class="col">
+
             <div class="card-body">
+{#                <div class="my-3">#}
+                    <span class="text-muted">username:</span> <a
+                        href="{% url 'user_profile' item.author.user.username %}"
+                        class="text-success">{{ item.author.user.username }}</a>
+{#                </div>#}
                 <p class="card-text">
                     {{ item.answer }}
                 </p>
-                <div class="my-3">
-                    <span class="text-muted">username:</span> <span
-                        class="text-success">{{ item.author.user.username }}</span>
-                </div>
                 <div class="row mb-0 me-1">
                     <div class="d-flex justify-content-between align-items-center" id="{{ item.id }}">
                         <div class="btn-group">
@@ -35,7 +33,8 @@
                                         <path d="M720-120H280v-520l280-280 50 50q7 7 11.5 19t4.5 23v14l-44 174h258q32 0 56 24t24 56v80q0 7-2 15t-4 15L794-168q-9 20-30 34t-44 14Zm-360-80h360l120-280v-80H480l54-220-174 174v406Zm0-406v406-406Zm-80-34v80H160v360h120v80H80v-520h200Z"></path>
                                     </svg>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger answer-dislike-btn dislike-btn">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger answer-dislike-btn dislike-btn">
                                     <i class="fas fa-thumbs-down"></i>
                                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                                          width="24px" fill="#EA3323">
@@ -46,7 +45,7 @@
                         </div>
                         <div class="text-muted rat">
                             <i class="fas fa-star"></i>
-                            Rating:
+                            Рейтинг:
                             <span id="{{ item.id }}" class="answer-rating">{{ item.likes_count }}</span>
                         </div>
                     </div>

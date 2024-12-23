@@ -15,7 +15,7 @@ void Product::set_count(int new_count) {
     this->_count = new_count;
 }
 
-const std::string& Product::product_name() const {
+const std::string &Product::product_name() const {
     return _name;
 }
 
@@ -42,10 +42,10 @@ void ProductManager::delete_product(std::string product_name) {
 
 products ProductManager::get_all_products() {
     db_elements all_elements = _db.get_all();
-    std::vector<std::shared_ptr<Product>> _products;
+    std::vector<std::shared_ptr<Product> > _products;
     _products.reserve(all_elements.size());
 
-    for (const auto& [key, item_ptr] : all_elements) {
+    for (const auto &[key, item_ptr]: all_elements) {
         std::shared_ptr<Product> product_ptr = std::dynamic_pointer_cast<Product>(item_ptr);
         if (product_ptr) {
             _products.emplace_back(product_ptr);
@@ -75,20 +75,20 @@ void Person::set_created_at(std::chrono::time_point<std::chrono::system_clock> t
     created_at = time;
 }
 
-const std::string& Person::get_first_name() const {
+const std::string &Person::get_first_name() const {
     return first_name;
 }
 
-const std::string& Person::get_last_name() const {
+const std::string &Person::get_last_name() const {
     return last_name;
 }
 
-const std::string& Person::get_email() const {
+const std::string &Person::get_email() const {
     return email;
 }
 
 
-void Order::add_product(const std::shared_ptr<Product>& product) {
+void Order::add_product(const std::shared_ptr<Product> &product) {
     products.push_back(product);
 }
 
@@ -96,16 +96,16 @@ std::string Order::get_info() const {
     std::stringstream ss;
 
     ss << "customer: " + this->customer->get_first_name()
-        + " " + this->customer->get_last_name()
-        + " " + this->customer->get_email()
-        << std::endl;
+            + " " + this->customer->get_last_name()
+            + " " + this->customer->get_email()
+            << std::endl;
 
     ss << "products: " << products.size() << std::endl;
-    for (const auto& product : products) {
-        ss <<"  name:"<< product->product_name() << std::endl;
-        ss <<"  cost:" << product->product_cost() << std::endl;
+    for (const auto &product: products) {
+        ss << "  name:" << product->product_name() << std::endl;
+        ss << "  cost:" << product->product_cost() << std::endl;
     }
-    ss <<"delivery address: " <<  this->delivery_address << std::endl;
+    ss << "delivery address: " << this->delivery_address << std::endl;
 
     auto t_c = std::chrono::system_clock::to_time_t(this->created_at);
     auto t_tm = *std::localtime(&t_c);
@@ -113,7 +113,7 @@ std::string Order::get_info() const {
 
     std::strftime(&buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", &t_tm);
 
-    ss <<"date:" << buffer << std::endl;
+    ss << "date:" << buffer << std::endl;
 
     return ss.str();
 }
@@ -138,11 +138,11 @@ std::shared_ptr<Person> PersonManager::get_person(std::string full_name) {
     return std::dynamic_pointer_cast<Person>(_db.get_item(full_name));
 }
 
-std::vector<std::shared_ptr<Person>> PersonManager::get_all_persons() {
+std::vector<std::shared_ptr<Person> > PersonManager::get_all_persons() {
     db_elements all_elements = _db.get_all();
-    std::vector<std::shared_ptr<Person>> persons;
+    std::vector<std::shared_ptr<Person> > persons;
 
-    for (const auto& [key, value] : all_elements) {
+    for (const auto &[key, value]: all_elements) {
         auto person = std::dynamic_pointer_cast<Person>(value);
         if (person) {
             persons.push_back(person);
@@ -164,10 +164,10 @@ std::shared_ptr<Order> OrderManager::get_order(int order_id) {
     return std::dynamic_pointer_cast<Order>(_db.get_item("order_" + std::to_string(order_id)));
 }
 
-std::vector<std::shared_ptr<Order>> OrderManager::get_all_orders() {
+std::vector<std::shared_ptr<Order> > OrderManager::get_all_orders() {
     db_elements all_elements = _db.get_all();
-    std::vector<std::shared_ptr<Order>> orders;
-    for (const auto& [key, value] : all_elements) {
+    std::vector<std::shared_ptr<Order> > orders;
+    for (const auto &[key, value]: all_elements) {
         auto order = std::dynamic_pointer_cast<Order>(value);
         if (order) {
             orders.push_back(order);

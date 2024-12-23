@@ -12,10 +12,10 @@
  * Наследуется от AppendableInterface.
  */
 class Product final : public AppendableInterface {
-    std::string _name;///< Имя продукта.
-    unsigned int _cost;///< Стоимость продукта.
-    unsigned int _count;///< Количество продукта.
-    std::chrono::time_point<std::chrono::system_clock> _created_at;///< Время создания продукта.
+    std::string _name; ///< Имя продукта.
+    unsigned int _cost; ///< Стоимость продукта.
+    unsigned int _count; ///< Количество продукта.
+    std::chrono::time_point<std::chrono::system_clock> _created_at; ///< Время создания продукта.
 
 protected:
     /**
@@ -26,12 +26,12 @@ protected:
 
 public:
     Product() = delete; ///< Конструктор по умолчанию удалён.
-    Product(const Product & p) {
+    Product(const Product &p) {
         _name = p._name;
         _cost = p._cost;
         _count = p._count;
     } ///< Конструктор копирования удалён.
-    Product &operator=(const Product &) = delete;///< Оператор присваивания удалён.
+    Product &operator=(const Product &) = delete; ///< Оператор присваивания удалён.
 
     /**
      * Конструктор с параметрами для создания продукта.
@@ -39,11 +39,11 @@ public:
      * @param {unsigned int} product_cost - Стоимость продукта.
      * @param {unsigned int} count - Количество продукта.
      */
-    Product(std::string product_name, unsigned int product_cost, unsigned int count) :
-    _name(product_name), _cost(product_cost),
-         _count(count) {
-              assert(invariant());
-         }
+    Product(std::string product_name, unsigned int product_cost, unsigned int count) : _name(product_name),
+        _cost(product_cost),
+        _count(count) {
+        assert(invariant());
+    }
 
     /**
      * Получает имя продукта.
@@ -84,7 +84,7 @@ public:
         std::chrono::time_point<std::chrono::system_clock> time) override;
 };
 
-typedef std::vector<std::shared_ptr<Product>> products;
+typedef std::vector<std::shared_ptr<Product> > products;
 
 
 /**
@@ -98,7 +98,8 @@ public:
      * Конструктор для создания менеджера продуктов.
      * @param {DataBase} db - Объект базы данных.
      */
-    explicit ProductManager(DataBase db):_db(db) {}
+    explicit ProductManager(DataBase db): _db(db) {
+    }
 
     /**
      * Добавляет продукт в базу данных.
@@ -137,27 +138,33 @@ class Person final : public AppendableInterface {
     std::string last_name;
     std::string email;
     std::chrono::time_point<std::chrono::system_clock> created_at;
+
 public:
     Person(std::string first_name, std::string last_name, std::string email)
-     : first_name(std::move(first_name)), last_name(std::move(last_name)), email(std::move(email)) {}
+        : first_name(std::move(first_name)), last_name(std::move(last_name)), email(std::move(email)) {
+    }
 
     void set_created_at(std::chrono::time_point<std::chrono::system_clock> time) override;
 
-    const std::string& get_first_name() const;
-    const std::string& get_last_name() const;
-    const std::string& get_email() const;
+    const std::string &get_first_name() const;
+
+    const std::string &get_last_name() const;
+
+    const std::string &get_email() const;
 };
 
 class Order final : public AppendableInterface {
     std::shared_ptr<Person> customer;
-    std::vector<std::shared_ptr<Product>> products;
+    std::vector<std::shared_ptr<Product> > products;
     std::string delivery_address;
     std::chrono::time_point<std::chrono::system_clock> created_at;
+
 public:
     Order(std::shared_ptr<Person> customer, std::string delivery_address)
-        : customer(std::move(customer)), delivery_address(std::move(delivery_address)) {}
+        : customer(std::move(customer)), delivery_address(std::move(delivery_address)) {
+    }
 
-    void add_product(const std::shared_ptr<Product>& product);
+    void add_product(const std::shared_ptr<Product> &product);
 
     std::string get_info() const;
 
@@ -165,9 +172,11 @@ public:
 };
 
 class PersonManager {
-    DataBase& _db;
+    DataBase &_db;
+
 public:
-    explicit PersonManager(DataBase& db) : _db(db) {}
+    explicit PersonManager(DataBase &db) : _db(db) {
+    }
 
     void add_person(Person person);
 
@@ -175,13 +184,15 @@ public:
 
     std::shared_ptr<Person> get_person(std::string full_name);
 
-    std::vector<std::shared_ptr<Person>> get_all_persons();
+    std::vector<std::shared_ptr<Person> > get_all_persons();
 };
 
 class OrderManager {
-    DataBase& _db;
+    DataBase &_db;
+
 public:
-    explicit OrderManager(DataBase& db) : _db(db) {}
+    explicit OrderManager(DataBase &db) : _db(db) {
+    }
 
     void add_order(Order order, int order_id);
 
@@ -189,5 +200,5 @@ public:
 
     std::shared_ptr<Order> get_order(int order_id);
 
-    std::vector<std::shared_ptr<Order>> get_all_orders();
+    std::vector<std::shared_ptr<Order> > get_all_orders();
 };

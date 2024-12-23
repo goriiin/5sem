@@ -7,13 +7,13 @@
 #include "../include/hw/l3_DomainLayer.hpp"
 #include "../include/hw/l4_InfrastructureLayer.hpp"
 
-class Console: public InputOutputInterface {
+class Console : public InputOutputInterface {
 public:
-    explicit Console (std::istream& input = std::cin, std::ostream& out = std::cout):
-        _in(input), _out(out) {}
+    explicit Console(std::istream &input = std::cin, std::ostream &out = std::cout): _in(input), _out(out) {
+    }
 
-    std::ostream &output(const std::string& output_data) const override {
-        _out << output_data <<std::endl;
+    std::ostream &output(const std::string &output_data) const override {
+        _out << output_data << std::endl;
 
         return _out;
     }
@@ -32,8 +32,8 @@ public:
     }
 
 private:
-    std::istream& _in;
-    std::ostream& _out;
+    std::istream &_in;
+    std::ostream &_out;
 };
 
 int main() {

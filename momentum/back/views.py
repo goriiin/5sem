@@ -274,24 +274,18 @@ def search(request):
     users = Profile.objects.none()
     tags = Tag.objects.none()
 
-    # Проверяем, что запрос не пустой
     if query:
         if query.startswith('#'):
-            # Поиск по тегам
-            tag_query = query[1:]  # Убираем символ #
+            tag_query = query[1:]
             tags = Tag.objects.filter(tag_name__icontains=tag_query)
             posts = Post.objects.filter(tags__tag_name__icontains=tag_query).distinct().order_by('-created_time')
         else:
-            # Поиск постов по содержимому
             posts_content = Post.objects.filter(content__icontains=query)
-            # Поиск постов по тегам
             posts_tags = Post.objects.filter(tags__tag_name__icontains=query)
             posts = (posts_content | posts_tags).distinct().order_by('-created_time')
 
-            # Поиск пользователей
             users = Profile.objects.filter(user__username__icontains=query)
 
-            # Поиск тегов
             tags = Tag.objects.filter(tag_name__icontains=query)
 
     context = {
@@ -303,11 +297,6 @@ def search(request):
         'pop_users': model_manager.get_popular_users(),
     }
 
-    # Для отладки: вывести содержимое переменных в консоль
-    print(f"Query: {query}")
-    print(f"Posts: {posts}")
-    print(f"Users: {users}")
-    print(f"Tags: {tags}")
 
     return render(request, 'search_results.html', context)
 
