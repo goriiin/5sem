@@ -54,7 +54,11 @@ products ProductManager::get_all_products() {
 }
 
 void ProductManager::update_product(Product product) {
-    _db.update_item(product.product_name(), std::make_shared<Product>(product));
+    auto item_ptr = _db.get_item(product.product_name());
+    auto item = std::static_pointer_cast<Product>(item_ptr);
+    item->set_cost(item->product_cost() + product.product_cost());
+    item->set_count(item->count() + product.count());
+    _db.update_item(product.product_name(), item);
 }
 
 std::shared_ptr<Product> ProductManager::get_product(std::string product_name) {

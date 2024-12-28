@@ -2,37 +2,80 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
-#include <random>
 #include <utility>
 #include <vector>
 #include <string>
-#include <algorithm>
 
+// Интерфейс, описывающий предмет
 class ItemInterface {
 public:
     virtual ~ItemInterface() = default;
 
+    /**
+     * Функция, возвращающая название предмета
+     *
+     * @return Название предмета
+     */
     virtual std::string get_name() const = 0;
+
+    /**
+     * Функция, возвращающая стоимость предмета
+     *
+     * @return Стоимость предмета
+     */
     virtual double get_cost() const = 0;
+
+    /**
+     * Функция, проверяющая наличие предмета
+     *
+     * @return true, если предмет присутствует, иначе false
+     */
     virtual bool is_present() const = 0;
 };
 
+// Интерфейс для описания коллекции
 class CollectionInterface {
 public:
     virtual ~CollectionInterface() = default;
 
+    /**
+     * Функция, возвращающая украденные предметы
+     *
+     * @return Вектор украденных предметов
+     */
     virtual std::vector<std::shared_ptr<ItemInterface>> get_stolen_items() const = 0;
+
+    /**
+     * Функция, возвращающая общую стоимость украденных предметов
+     *
+     * @return Общая стоимость украденных предметов
+     */
     virtual double get_stolen_items_cost_amount() const = 0;
 };
 
+// Интерфейс для описания отчета
 class ReportInterface {
 public:
     virtual ~ReportInterface() = default;
 
+    /**
+     * Функция, создающая отчет и возвращающая сумму страховой выплаты
+     *
+     * @param collection Коллекция предметов
+     * @return Сумма страховой выплаты
+     */
     virtual double make_report(const CollectionInterface* collection) const = 0;
-    virtual void make_report(std::ostream& out, const CollectionInterface* manager) const = 0;
+
+    /**
+     * Функция, создающая отчет по коллекции и выводящая его в поток
+     *
+     * @param out Поток вывода
+     * @param collection Коллекция предметов
+     */
+    virtual void make_report(std::ostream& out, const CollectionInterface* collection) const = 0;
 };
 
+// Реализация интерфейса предмета в виде монеты
 class Coin final : public ItemInterface {
 public:
     Coin(std::string name, const double cost, const bool is_present = true) : _name(std::move(name)),
@@ -41,14 +84,29 @@ public:
         invariant();
     }
 
+    /**
+     * Функция, возвращающая название монеты
+     *
+     * @return Название монеты
+     */
     std::string get_name() const override {
         return _name;
     }
 
+    /**
+     * Функция, возвращающая стоимость монеты
+     *
+     * @return Стоимость монеты
+     */
     double get_cost() const override {
         return _cost;
     }
 
+    /**
+     * Функция, проверяющая наличие монеты
+     *
+     * @return true, если монета присутствует, иначе false
+     */
     bool is_present() const override {
         return _is_present;
     }
@@ -58,17 +116,26 @@ private:
     double _cost;
     bool _is_present;
 
+    /**
+     * Инвариант для проверки корректности стоимости монеты
+     */
     void invariant() const {
         assert(_cost > 0);
     }
 };
 
+// Класс, представляющий коллекцию монет
 class CoinCollection final : public CollectionInterface {
 public:
     CoinCollection() = delete;
 
     explicit CoinCollection(const std::vector<Coin>& items) : _coins(items) {}
 
+    /**
+     * Функция, возвращающая общую стоимость украденных монет
+     *
+     * @return Общая стоимость украденных монет
+     */
     double get_stolen_items_cost_amount() const override {
         double total_cost = 0;
         for (const auto& coin : _coins) {
@@ -79,6 +146,11 @@ public:
         return total_cost;
     }
 
+    /**
+     * Функция, возвращающая украденные монеты
+     *
+     * @return Вектор украденных монет
+     */
     std::vector<std::shared_ptr<ItemInterface>> get_stolen_items() const override {
         std::vector<std::shared_ptr<ItemInterface>> result;
 
@@ -95,14 +167,22 @@ private:
     std::vector<Coin> _coins;
 };
 
+// Класс для управления отчетами
 class ReportManager final : public ReportInterface {
 public:
     ReportManager() = default;
+
     explicit ReportManager(const CollectionInterface* collection) : _cost(collection->get_stolen_items_cost_amount()) {}
 
+    /**
+     * Функция, создающая отчет по коллекции и выводящая его в поток
+     *
+     * @param out Поток вывода
+     * @param collection Коллекция предметов
+     */
     void make_report(std::ostream& out, const CollectionInterface* collection) const override {
         out << "--------------------------------\n";
-        out << "Collection REPORT"<< std::endl;
+        out << "Collection REPORT" << std::endl;
         out << std::fixed << std::setprecision(2) << make_report(collection) << std::endl;
         out << std::endl;
         out << "stolen:" << std::endl;
@@ -113,6 +193,12 @@ public:
         out << "--------------------------------\n";
     }
 
+    /**
+     * Функция, создающая отчет и возвращающая сумму страховой выплаты
+     *
+     * @param collection Коллекция предметов
+     * @return Сумма страховой выплаты
+     */
     double make_report(const CollectionInterface* collection) const override {
         return collection->get_stolen_items_cost_amount();
     }
@@ -120,7 +206,6 @@ public:
 private:
     double _cost{};
 };
-
 
 int main() {
     const std::vector<Coin> items = {
@@ -168,14 +253,10 @@ int main() {
     const CoinCollection collection3(items3);
     const CoinCollection collection4(items4);
 
-
     const ReportManager report_manager;
     report_manager.make_report(std::cout, &collection);
-
     report_manager.make_report(std::cout, &collection2);
-
     report_manager.make_report(std::cout, &collection3);
-
     report_manager.make_report(std::cout, &collection4);
 
     return 0;

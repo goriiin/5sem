@@ -162,6 +162,7 @@ class Order final : public AppendableInterface {
 public:
     Order(std::shared_ptr<Person> customer, std::string delivery_address)
         : customer(std::move(customer)), delivery_address(std::move(delivery_address)) {
+        this->created_at = std::chrono::system_clock::now();
     }
 
     void add_product(const std::shared_ptr<Product> &product);
@@ -200,5 +201,5 @@ public:
 
     std::shared_ptr<Order> get_order(int order_id);
 
-    std::vector<std::shared_ptr<Order> > get_all_orders();
+    std::vector<std::shared_ptr<Order>> get_all_orders();
 };

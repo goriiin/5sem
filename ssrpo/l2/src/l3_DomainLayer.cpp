@@ -108,12 +108,12 @@ std::string Order::get_info() const {
     ss << "delivery address: " << this->delivery_address << std::endl;
 
     auto t_c = std::chrono::system_clock::to_time_t(this->created_at);
-    auto t_tm = *std::localtime(&t_c);
-    char buffer;
 
-    std::strftime(&buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", &t_tm);
+    struct tm *tm_info = localtime(&t_c);
 
-    ss << "date:" << buffer << std::endl;
+    char date_str[11];
+    strftime(date_str, sizeof(date_str), "%Y-%m-%d", tm_info);
+    ss << "date: " << date_str << std::endl;
 
     return ss.str();
 }
@@ -164,9 +164,9 @@ std::shared_ptr<Order> OrderManager::get_order(int order_id) {
     return std::dynamic_pointer_cast<Order>(_db.get_item("order_" + std::to_string(order_id)));
 }
 
-std::vector<std::shared_ptr<Order> > OrderManager::get_all_orders() {
+std::vector<std::shared_ptr<Order>> OrderManager::get_all_orders() {
     db_elements all_elements = _db.get_all();
-    std::vector<std::shared_ptr<Order> > orders;
+    std::vector<std::shared_ptr<Order>> orders;
     for (const auto &[key, value]: all_elements) {
         auto order = std::dynamic_pointer_cast<Order>(value);
         if (order) {
